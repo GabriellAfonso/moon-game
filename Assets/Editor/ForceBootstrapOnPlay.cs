@@ -9,7 +9,13 @@ public static class ForceBootstrapOnPlay
         EditorApplication.playModeStateChanged += state =>
         {
             if (state == PlayModeStateChange.ExitingEditMode)
+            {
+                // Abre o bootstrap
                 EditorSceneManager.OpenScene("Assets/Scenes/Bootstrap.unity");
+
+                // Depois abre a cena de login
+                EditorSceneManager.OpenScene("Assets/Scenes/Login.unity", OpenSceneMode.Additive);
+            }
         };
     }
 }

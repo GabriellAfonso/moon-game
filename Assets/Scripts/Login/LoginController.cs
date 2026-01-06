@@ -4,58 +4,63 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class LoginController : MonoBehaviour
 {
-    // Removido: [SerializeField] private AppConfig appConfig; 
-    // Agora não precisa mais arrastar nada no Inspector!
-
     [Header("UI")]
     [SerializeField] private TMP_InputField usernameInput;
     [SerializeField] private TMP_InputField passwordInput;
     [SerializeField] private Button loginButton;
 
-    public void OnLoginClicked()
+    private void Awake()
     {
-        // Verifica se a variável global foi inicializada pelo Bootstrap
-        if (AppEnvManager.Settings == null)
+        loginButton.onClick.AddListener(HandleLogin);
+
+        usernameInput.onSubmit.AddListener(_ => HandleLogin());
+        passwordInput.onSubmit.AddListener(_ => HandleLogin());
+    }
+
+    private void HandleLogin()
+    {
+        if (!IsEnvironmentReady())
+            return;
+
+        string username = usernameInput.text.Trim();
+        string password = passwordInput.text;
+
+        if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
         {
-            Debug.LogError("Configuração Global não encontrada! O Bootstrap rodou primeiro?");
+            Debug.LogWarning("Usuário ou senha vazios.");
             return;
         }
 
-        string username = usernameInput.text;
-        string password = passwordInput.text;
-
-        StartCoroutine(LoginRequest(username, password));
+        StartCoroutine(SendLoginRequest(username, password));
     }
 
-    private IEnumerator LoginRequest(string username, string password)
+    private bool IsEnvironmentReady()
     {
-        // ACESSO GLOBAL: Pega os dados direto do Manager estático
-        string urlBase = AppEnvManager.Settings.apiBaseUrl;
-        string endpoint = AppEnvManager.Settings.loginEndpoint;
-        string loginUrl = urlBase + endpoint;
-
-        LoginPayload payload = new LoginPayload
+        if (AppEnvManager.Settings == null)
         {
-            username = username,
-            password = password
-        };
+            Debug.LogError("Configuração global não encontrada. O Bootstrap foi executado?");
+            return false;
+        }
 
-        string json = JsonUtility.ToJson(payload);
-        byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
+        return true;
+    }
 
-        UnityWebRequest request = new UnityWebRequest(loginUrl, "POST");
-        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Content-Type", "application/json");
+    private IEnumerator SendLoginRequest(string username, string password)
+    {
+        string loginUrl = BuildLoginUrl();
+        string jsonBody = BuildLoginRequestDto(username, password);
 
-        loginButton.interactable = false;
+        using UnityWebRequest request = CreatePostRequest(loginUrl, jsonBody);
+
+        SetLoginInteractable(false);
 
         yield return request.SendWebRequest();
 
-        loginButton.interactable = true;
+        SetLoginInteractable(true);
 
         if (request.result != UnityWebRequest.Result.Success)
         {
@@ -63,16 +68,80 @@ public class LoginController : MonoBehaviour
             yield break;
         }
 
+        HandleLoginSuccess(request.downloadHandler.text);
+    }
+
+    private string BuildLoginUrl()
+    {
+        return $"http://{AppEnvManager.Settings.apiBaseUrl}{AppEnvManager.Settings.loginEndpoint}";
+    }
+
+    private string BuildLoginRequestDto(string username, string password)
+    {
+        return JsonUtility.ToJson(new LoginRequestDto
+        {
+            username = username,
+            password = password
+        });
+    }
+
+    private UnityWebRequest CreatePostRequest(string url, string jsonBody)
+    {
+        var request = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST)
+        {
+            uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody)),
+            downloadHandler = new DownloadHandlerBuffer()
+        };
+
+        request.SetRequestHeader("Content-Type", "application/json");
+        return request;
+    }
+
+    private void HandleLoginSuccess(string jsonResponse)
+    {
+        var response = JsonUtility.FromJson<LoginResponse>(jsonResponse);
+
         Debug.Log($"Login bem-sucedido no ambiente: {AppEnvManager.Settings.name}");
         var connectionClient = WebSocketClient.connectionClient;
-        Debug.Log("vai conectar");
-        //connectionClient.Connect();
+
+        connectionClient.OnConnected += HandleSocketConnected;
+        connectionClient.OnConnectionError += HandleSocketError;
+
+        connectionClient.Connect(response.token);
+    }
+
+    private void HandleSocketConnected()
+    {
+        WebSocketClient.connectionClient.OnConnected -= HandleSocketConnected;
+        WebSocketClient.connectionClient.OnConnectionError -= HandleSocketError;
+
+        SceneManager.LoadScene("Home");
+    }
+
+    private void HandleSocketError(string error)
+    {
+        WebSocketClient.connectionClient.OnConnected -= HandleSocketConnected;
+        WebSocketClient.connectionClient.OnConnectionError -= HandleSocketError;
+
+        Debug.LogError($"Erro ao conectar no WebSocket: {error}");
+    }
+
+    private void SetLoginInteractable(bool value)
+    {
+        loginButton.interactable = value;
     }
 
     [System.Serializable]
-    private class LoginPayload
+    private class LoginRequestDto
     {
         public string username;
         public string password;
+    }
+
+    [System.Serializable]
+    private class LoginResponse
+    {
+        public string token;
+        public string refresh;
     }
 }

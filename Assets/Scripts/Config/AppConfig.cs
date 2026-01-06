@@ -11,4 +11,7 @@ public class AppConfig : ScriptableObject
 
     [Header("Endpoints")]
     public string loginEndpoint;
+
+    [Header("WebSocket")]
+    public string connectionConsumerUrl;
 }

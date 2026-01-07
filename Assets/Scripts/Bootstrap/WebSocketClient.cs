@@ -13,7 +13,6 @@ public class WebSocketClient : MonoBehaviour
 
         string apiBaseUrl = AppEnvManager.Settings.apiBaseUrl;
         string connectionUrl = AppEnvManager.Settings.connectionConsumerUrl;
-        Debug.Log("ws://" + apiBaseUrl + connectionUrl);
 
         connectionClient = new ConnectionClient("ws://" + apiBaseUrl + connectionUrl);
     }

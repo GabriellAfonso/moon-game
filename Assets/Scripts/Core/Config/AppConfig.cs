@@ -15,4 +15,6 @@ public class AppConfig : ScriptableObject
 
     [Header("WebSocket")]
     public string connectionConsumerUrl;
+    public string matchmakingConsumerUrl;
+    public string matchConsumerUrl;
 }

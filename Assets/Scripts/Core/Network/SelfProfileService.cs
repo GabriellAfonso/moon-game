@@ -40,7 +40,7 @@ public class SelfProfileService : MonoBehaviour
         }
 
         var json = request.downloadHandler.text;
-        var profile = JsonUtility.FromJson<PlayerProfileDTO>(json);
+        var profile = JsonUtility.FromJson<SelfPlayerProfileDTO>(json);
 
         PlayerSession.Instance.SetProfile(profile);
     }

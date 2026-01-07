@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class WebSocketClient : MonoBehaviour
 {
-    public static ConnectionClient connectionClient { get; private set; }
+    public static ConnectionClient ConnectionClient { get; private set; }
+    public static MatchmakingClient MatchmakingClient { get; private set; }
 
 
     void Awake()
@@ -13,8 +14,11 @@ public class WebSocketClient : MonoBehaviour
 
         string apiBaseUrl = AppEnvManager.Settings.apiBaseUrl;
         string connectionUrl = AppEnvManager.Settings.connectionConsumerUrl;
+        string matchmakingUrl = AppEnvManager.Settings.matchmakingConsumerUrl;
+        string matchUrl = AppEnvManager.Settings.matchConsumerUrl;
 
-        connectionClient = new ConnectionClient("ws://" + apiBaseUrl + connectionUrl);
+        ConnectionClient = new ConnectionClient("ws://" + apiBaseUrl + connectionUrl);
+        MatchmakingClient = new MatchmakingClient("ws://" + apiBaseUrl + matchmakingUrl);
     }
   
 }

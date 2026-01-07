@@ -16,3 +16,5 @@ MonoBehaviour:
   loginEndpoint: /accounts/login/
   playerMe: /players/me/
   connectionConsumerUrl: /ws/connection/
+  matchmakingConsumerUrl: /ws/matchmaking/
+  matchConsumerUrl: /ws/match/

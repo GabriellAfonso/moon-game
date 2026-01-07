@@ -21,13 +21,15 @@ public abstract class BaseClient
     public event Action<string> OnConnectionError;
     // ===== Conexão =====
 
-    public async void Connect(string token)
+    public async void Connect()
     {
 
         if (isConnected)
             return;
 
-        this.token = token;
+        var session = PlayerSession.Instance;
+        
+        this.token = session.Token;
 
         var url = BuildUrl();
         socket = new WebSocket(url);

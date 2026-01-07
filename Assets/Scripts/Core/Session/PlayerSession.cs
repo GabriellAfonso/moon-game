@@ -4,6 +4,7 @@ public class PlayerSession : MonoBehaviour
 {
     public static PlayerSession Instance { get; private set; }
 
+    public string Token { get; private set; }
     public string Nickname { get; private set; }
     public string Icon { get; private set; }
     public int Level { get; private set; }
@@ -24,7 +25,7 @@ public class PlayerSession : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public void SetProfile(PlayerProfileDTO profile)
+    public void SetProfile(SelfPlayerProfileDTO profile)
     {
         Nickname = profile.nickname;
         Icon = profile.icon;
@@ -35,5 +36,10 @@ public class PlayerSession : MonoBehaviour
 
         Debug.Log(profile.nickname);
 
+    }
+
+    public void SetToken(string token)
+    {
+        Token = token;
     }
 }

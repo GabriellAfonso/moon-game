@@ -2,7 +2,7 @@ using UnityEngine;
 
 
 [System.Serializable]
-public class PlayerProfileDTO
+public class SelfPlayerProfileDTO
 {
     public string nickname;
     public string icon;

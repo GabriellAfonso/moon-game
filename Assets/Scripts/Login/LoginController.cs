@@ -102,31 +102,32 @@ public class LoginController : MonoBehaviour
         var response = JsonUtility.FromJson<LoginResponse>(jsonResponse);
 
         Debug.Log($"Login bem-sucedido no ambiente: {AppEnvManager.Settings.name}");
-        var connectionClient = WebSocketClient.connectionClient;
+        var connectionClient = WebSocketClient.ConnectionClient;
 
         connectionClient.OnConnected += HandleSocketConnected;
         connectionClient.OnConnectionError += HandleSocketError;
 
-
+        PlayerSession.Instance.SetToken(response.token);
         SelfProfileService.Instance.LoadProfile(response.token);
-        connectionClient.Connect(response.token);
+
+        connectionClient.Connect();
     }
 
     private void HandleSocketConnected()
     {
-        WebSocketClient.connectionClient.OnConnected -= HandleSocketConnected;
-        WebSocketClient.connectionClient.OnConnectionError -= HandleSocketError;
+        WebSocketClient.ConnectionClient.OnConnected -= HandleSocketConnected;
+        WebSocketClient.ConnectionClient.OnConnectionError -= HandleSocketError;
 
       
 
 
-        SceneManager.LoadScene("Home");
+        SceneManager.LoadScene("HomeScene");
     }
 
     private void HandleSocketError(string error)
     {
-        WebSocketClient.connectionClient.OnConnected -= HandleSocketConnected;
-        WebSocketClient.connectionClient.OnConnectionError -= HandleSocketError;
+        WebSocketClient.ConnectionClient.OnConnected -= HandleSocketConnected;
+        WebSocketClient.ConnectionClient.OnConnectionError -= HandleSocketError;
 
         Debug.LogError($"Erro ao conectar no WebSocket: {error}");
     }
